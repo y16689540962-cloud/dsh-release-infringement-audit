@@ -35,9 +35,9 @@ CASES = [
         "files": {
             "package.json": json.dumps({
                 "name": "my-clean-pkg", "version": "1.0.0", "license": "MIT",
-                "author": "justin", "dependencies": {"lodash": "^4.17.21"},
+                "author": "y16689540962-cloud", "dependencies": {"lodash": "^4.17.21"},
             }),
-            "LICENSE": "MIT License\n\nCopyright (c) 2026 justin\n",
+            "LICENSE": "MIT License\n\nCopyright (c) 2026 y16689540962-cloud\n",
             "index.js": "console.log('hello');\n",
             "node_modules/lodash/package.json": json.dumps(
                 {"name": "lodash", "version": "4.17.21", "license": "MIT"}),
@@ -117,7 +117,7 @@ CASES = [
     {
         "name": "B: 他人版权行 → WARN",
         "files": {
-            "package.json": json.dumps({"name": "copied", "version": "1.0.0", "license": "MIT", "author": "justin"}),
+            "package.json": json.dumps({"name": "copied", "version": "1.0.0", "license": "MIT", "author": "y16689540962-cloud"}),
             "LICENSE": "MIT License\n",
             "util.js": "// Copyright (c) 2019 Someone Else\ncoolFunction();\n",
         },
@@ -126,9 +126,9 @@ CASES = [
     {
         "name": "B: 自己的版权行 + THIRD-PARTY-NOTICES 不误报",
         "files": {
-            "package.json": json.dumps({"name": "own", "version": "1.0.0", "license": "MIT", "author": "justin"}),
-            "LICENSE": "MIT License\n\nCopyright (c) 2026 justin\n",
-            "main.js": "// Copyright (c) 2026 justin\n",
+            "package.json": json.dumps({"name": "own", "version": "1.0.0", "license": "MIT", "author": "y16689540962-cloud"}),
+            "LICENSE": "MIT License\n\nCopyright (c) 2026 y16689540962-cloud\n",
+            "main.js": "// Copyright (c) 2026 y16689540962-cloud\n",
             "THIRD-PARTY-NOTICES.md": "react\nCopyright (c) Meta Platforms, Inc.\n",
         },
         "expect": {"B": 0},
