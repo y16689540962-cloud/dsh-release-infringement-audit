@@ -1,0 +1,43 @@
+{
+  "name": "dsh-release-infringement-audit",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "DSH plugin: one agent tool that audits a project for release-time infringement risk (licence contagion, copied third-party code, assets, trademarks, secrets) before publishing.",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "index.js",
+    "lib/",
+    "skill/",
+    "scripts/",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "selftest": "python3 skill/scripts/selftest.py"
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-tools": "0.2.0-rc.2"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "license-audit",
+    "compliance"
+  ],
+  "license": "MIT"
+}

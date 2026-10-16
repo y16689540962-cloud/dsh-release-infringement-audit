@@ -1,0 +1,19 @@
+# Release infringement audit bundle.
+#
+# Inserts one Host plugin, which registers exactly one agent tool
+# (`release_infringement_audit`). The tool shells out to the bundled scanner in
+# `skill/scripts/release_audit.py` and never writes to the audited project — it only
+# reads it and returns a report.
+#
+# This layer adds only its own row: the profile keeps every bundle it already had.
+- insert:
+    - id: release-infringement-audit
+      name: 'dsh-release-infringement-audit'
+      config:
+        # python3 executable that runs the bundled scanner.
+        # Empty means: $DSH_AUDIT_PYTHON, then $PYTHON, then `python3` from PATH.
+        python: ''
+        # Cooperative budget for one audit run, in milliseconds. A big project with
+        # an unresolved dependency tree is the slow case: every unresolved package
+        # falls back to a registry lookup.
+        timeoutMs: 120000

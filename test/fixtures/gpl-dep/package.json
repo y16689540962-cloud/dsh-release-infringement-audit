@@ -1,0 +1,6 @@
+{
+  "name": "ria-fixture-gpl",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": { "gpl-dep": "^1.0.0" }
+}

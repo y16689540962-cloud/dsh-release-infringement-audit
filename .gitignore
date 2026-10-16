@@ -1,0 +1,6 @@
+node_modules/
+__pycache__/
+.pycache/
+*.tgz
+.release-audit/
+.DS_Store
