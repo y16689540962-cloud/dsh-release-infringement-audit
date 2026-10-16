@@ -39,5 +39,14 @@
     "license-audit",
     "compliance"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/y16689540962-cloud/dsh-release-infringement-audit.git"
+  },
+  "homepage": "https://github.com/y16689540962-cloud/dsh-release-infringement-audit#readme",
+  "bugs": {
+    "url": "https://github.com/y16689540962-cloud/dsh-release-infringement-audit/issues"
+  },
+  "author": "justin"
 }
