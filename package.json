@@ -1,6 +1,6 @@
 {
   "name": "dsh-release-infringement-audit",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "description": "DSH plugin: one agent tool that audits a project for release-time infringement risk (licence contagion, copied third-party code, assets, trademarks, secrets) before publishing.",
   "main": "index.js",

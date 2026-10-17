@@ -54,6 +54,8 @@ dsh plugin --profile desktop add dsh-release-infringement-audit
 
 退出码 1/2 是**正常结论**而非失败：运行器把它们读成结果，而不是抛错。
 
+**网络行为**：依赖未安装时会向 npm registry 查询依赖名与版本号（不发代码/密钥）；`--offline` / 配置 `offline: true` 可完全关闭。
+
 ## 五类风险
 
 | 类别 | 覆盖 | 阻断示例 |
