@@ -1,7 +1,7 @@
 ---
 name: release-infringement-audit
 description: 发布前侵权/法律风险审核。当用户说「发布前审一下」「有没有侵权风险」「能发到 npm/ClawHub/GitHub 吗」「release audit」时使用。扫描开源许可证兼容性（GPL 传染/CC-NC）、复制的第三方代码、文档图片字体素材、商标冲突、密钥泄漏五大类，输出结构化分级报告。判定锚定 SPDX 与 FSF/CC 官方分类。
-version: 1.0.4
+version: 1.0.5
 license: MIT
 metadata: {"openclaw":{"requires":{"bins":["python3"]}}}
 ---
@@ -32,18 +32,18 @@ python3 <skill目录>/scripts/release_audit.py /path/to/project --format json
 # 写入报告文件
 python3 <skill目录>/scripts/release_audit.py /path/to/project --out audit-report.md
 
-# 离线模式：不访问 npm registry（依赖未安装时报 INFO）
-python3 <skill目录>/scripts/release_audit.py /path/to/project --offline
+# 可选联网：解析未安装依赖的许可证（默认不联网）
+python3 <skill目录>/scripts/release_audit.py /path/to/project --online
 ```
 
 退出码：`0` 干净 · `1` 仅警告 · `2` 存在阻断项。
 
 ## 网络行为（隐私须知）
 
-- 依赖**未安装**时，为解析其许可证，会向 `registry.npmjs.org` 查询**依赖名与版本号**。
-  这是公开 registry 的常规查询；**不发送项目代码、文件内容或任何密钥**。
-- 介意隐私或离线环境：加 `--offline`（插件配置 `offline: true`）。
-  此时不发任何网络请求，未安装依赖的许可证报 INFO。
+- **默认不联网**：审核过程不发起任何网络请求，依赖名/版本号不出本机。
+- 只有显式加 `--online`（插件配置 `online: true`）时，才会向 `registry.npmjs.org`
+  查询**未安装依赖**的许可证（仅依赖名与版本号；不发送项目代码、文件内容或密钥）。
+- 不联网时，未安装依赖的许可证报 INFO，不影响其余四类检查。
 
 ## 审核范围（五大类）
 

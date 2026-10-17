@@ -114,7 +114,7 @@ test('runner failures reach the caller unchanged', async () => {
 test('config flows into the runner: python, timeout budget and offline mode', async () => {
 	let seen = null;
 	const tool = createTool(
-		{ python: '/opt/custom/python3', timeoutMs: 4321, offline: true },
+		{ python: '/opt/custom/python3', timeoutMs: 4321, online: true },
 		{
 			runAudit: async (options) => {
 				seen = options;
@@ -126,7 +126,7 @@ test('config flows into the runner: python, timeout budget and offline mode', as
 	await tool.execute({ path: '/tmp/x' }, {});
 	assert.equal(seen.python, '/opt/custom/python3');
 	assert.equal(seen.timeoutMs, 4321);
-	assert.equal(seen.offline, true, 'offline must reach the scanner so no registry lookup happens');
+	assert.equal(seen.online, true, 'online must reach the scanner so registry lookups are explicit');
 	assert.equal(seen.projectPath, '/tmp/x');
 });
 

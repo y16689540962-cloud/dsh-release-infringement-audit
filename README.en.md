@@ -37,7 +37,8 @@ Restart DSH afterwards; every session can then call the tool.
 | Field | Default | Meaning |
 |---|---|---|
 | `python` | empty | Interpreter for the scanner. Empty = `$DSH_AUDIT_PYTHON` → `$PYTHON` → `python3` |
-| `timeoutMs` | `120000` | Budget for one audit. Uninstalled dependencies make it slower (each falls back to a registry lookup) |
+| `timeoutMs` | `120000` | Budget for one audit. Uninstalled dependencies make it slower when `online` is enabled |
+| `online` | `false` | Allow npm registry lookups to resolve uninstalled dependencies. Network is **off by default** |
 
 ## Tool contract
 

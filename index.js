@@ -45,7 +45,7 @@ const FINDING_PROPERTIES = {
 export function createTool(config = {}, deps = {}) {
 	const python = resolvePython(config);
 	const timeoutMs = Number(config.timeoutMs) > 0 ? Number(config.timeoutMs) : DEFAULT_TIMEOUT_MS;
-	const offline = config.offline === true;
+	const online = config.online === true;
 	const audit = deps.runAudit ?? runAudit;
 
 	return defineTool({
@@ -108,7 +108,7 @@ export function createTool(config = {}, deps = {}) {
 				projectPath: args.path,
 				python,
 				timeoutMs,
-				offline,
+				online,
 				signal: exec?.signal,
 			});
 			return toToolValue(report, exitCode);

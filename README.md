@@ -36,7 +36,7 @@ dsh plugin --profile desktop add dsh-release-infringement-audit
 |---|---|---|
 | `python` | 空 | 运行扫描器的解释器。空 = `$DSH_AUDIT_PYTHON` → `$PYTHON` → `python3` |
 | `timeoutMs` | `120000` | 单次审核预算。依赖未安装时每个包都要查 registry，慢的情况在这里调 |
-| `offline` | `false` | `true` = 完全不访问 npm registry（依赖名/版本不外发）；未安装依赖的许可证报 INFO |
+| `online` | `false` | `true` = 允许查询 npm registry 解析未安装依赖的许可证；默认不联网 |
 
 ## 工具契约
 
@@ -54,7 +54,7 @@ dsh plugin --profile desktop add dsh-release-infringement-audit
 
 退出码 1/2 是**正常结论**而非失败：运行器把它们读成结果，而不是抛错。
 
-**网络行为**：依赖未安装时会向 npm registry 查询依赖名与版本号（不发代码/密钥）；`--offline` / 配置 `offline: true` 可完全关闭。
+**网络行为**：**默认不联网**。仅当显式 `--online`（配置 `online: true`）时，才向 npm registry 查询未安装依赖的许可证（仅依赖名/版本号，不发代码或密钥）。
 
 ## 五类风险
 

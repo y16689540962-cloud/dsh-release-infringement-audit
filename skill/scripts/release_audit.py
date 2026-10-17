@@ -214,6 +214,15 @@ class Audit:
         # 离线模式：不访问 npm registry（依赖名/版本属于私有信息，可能不愿外发）
         self.offline = False
 
+    def _within_root(self, path):
+        """路径解析后必须仍在被审项目内（防止 node_modules 里的 symlink 越界读取）。"""
+        try:
+            real = Path(path).resolve()
+            root = self.root.resolve()
+            return real == root or str(real).startswith(str(root) + os.sep)
+        except OSError:
+            return False
+
     def add(self, sev, cat, title, evidence, basis, fix):
         self.findings.append({
             "id": f"{cat}{len([f for f in self.findings if f['category'] == cat]) + 1}",
@@ -298,7 +307,7 @@ class Audit:
         for name, want_ver in sorted(deps.items()):
             verdict_lic, src = None, None
             nm = self.root / "node_modules" / name / "package.json"
-            if nm.is_file():
+            if nm.is_file() and self._within_root(nm):
                 try:
                     d = json.loads(nm.read_text(encoding="utf-8"))
                     verdict_lic, src = d.get("license"), "node_modules"
@@ -309,9 +318,9 @@ class Audit:
                 src = "registry"
             if verdict_lic is None and self.offline:
                 self.add("INFO", "A", f"离线模式下依赖 license 无法解析: {name}",
-                         "node_modules 中未找到该依赖，且 --offline 禁止 registry 查询",
-                         "离线模式不发送任何依赖信息到外部",
-                         "先 npm install 再审核，或去掉 --offline")
+                         "node_modules 中未找到该依赖，且默认不联网（--online 可开启 registry 查询）",
+                         "默认不发送任何依赖信息到外部（隐私优先）",
+                         "先 npm install 再审核，或加 --online")
                 continue
             if verdict_lic is None:
                 self.add("INFO", "A", f"依赖 license 无法解析: {name}",
@@ -654,8 +663,8 @@ def main():
     ap.add_argument("project", help="项目目录")
     ap.add_argument("--format", choices=("md", "json"), default="md")
     ap.add_argument("--out", help="写入文件而非 stdout")
-    ap.add_argument("--offline", action="store_true",
-                    help="不访问 npm registry（依赖未安装时无法解析其许可证）")
+    ap.add_argument("--online", action="store_true",
+                    help="允许访问 npm registry 解析未安装依赖的许可证（默认不联网）")
     args = ap.parse_args()
 
     root = Path(args.project)
@@ -664,7 +673,7 @@ def main():
         return 2
 
     audit = Audit(root)
-    audit.offline = bool(args.offline)
+    audit.offline = not bool(args.online)
     owner_names = set()
     pkg = root / "package.json"
     if pkg.exists():
