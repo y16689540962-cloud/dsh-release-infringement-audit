@@ -39,7 +39,7 @@ python3 scripts/selftest.py
 ## 依赖
 
 - `python3`（仅标准库；无第三方包）
-- 可选：被审项目根目录若有 `check-secrets.sh`，密钥扫描会委托它执行
+- 安全边界：**不执行被审项目中的任何脚本**；检测到 `check-secrets.sh` 只提示、不运行
 
 ## 已知局限
 

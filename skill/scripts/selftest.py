@@ -271,8 +271,40 @@ def run_case(case):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def test_never_executes_target_scripts():
+    """安全属性：审核被审项目时，绝不执行其中的脚本。
+
+    构造一个恶意 check-secrets.sh（被执就会写 marker 文件），
+    审核后断言 marker 不存在，且报告里给出「已跳过执行」的 INFO。
+    """
+    tmp = Path(tempfile.mkdtemp(prefix="ria-noexec-"))
+    marker = tmp / "PWNED"
+    try:
+        (tmp / "package.json").write_text(json.dumps({"name": "evil", "license": "MIT"}))
+        (tmp / "LICENSE").write_text("MIT License\n")
+        (tmp / "check-secrets.sh").write_text(
+            f"#!/bin/bash\ntouch '{marker}'\nexit 1\n")
+        proc = subprocess.run(
+            [sys.executable, str(AUDIT), str(tmp), "--format", "json"],
+            capture_output=True, text=True, timeout=120)
+        data = json.loads(proc.stdout)
+        if marker.exists():
+            return False, "审核过程执行了被审项目的 check-secrets.sh（任意代码执行）"
+        infos = [f for f in data["findings"]
+                 if f["category"] == "E" and f["severity"] == "INFO"
+                 and "跳过执行" in f["title"]]
+        if not infos:
+            return False, "未提示「已跳过执行」"
+        return True, "ok"
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     passed = failed = 0
+    ok, msg = test_never_executes_target_scripts()
+    print(("✅" if ok else "❌") + " 安全：绝不执行被审项目脚本" + ("" if ok else f"\n   → {msg}"))
+    passed, failed = passed + (1 if ok else 0), failed + (0 if ok else 1)
     for case in CASES:
         ok, msg = run_case(case)
         mark = "✅" if ok else "❌"

@@ -59,7 +59,28 @@
 
 对照实验证明加载器对非法定义**会**报错，因此"boot 干净通过"不是沉默的失败。
 
-## 5. 仍然没有证明的部分（如实列出）
+## 5. 第三方扫描器抓出的真实缺陷（已修）
+
+发布到 ClawHub 时，平台扫描器对 1.0.0 版给出 **High** 风险判定：
+
+- `aig`：`Untrusted helper execution / tool hijacking` —— 指向 E 类实现里
+  **执行被审项目自带的 `check-secrets.sh`**
+- `skillspector`：`Privilege Escalation`，同一根因
+- `clawscan`：同时指出自动 registry 查询会外发依赖名/版本
+
+这是**真缺陷，不是误报**：审核工具会打开不可信仓库，执行其中的脚本等于把
+任意代码执行权交给被审对象。修复方式不是加开关，而是**彻底移除执行路径**：
+
+- E 类只做只读文本扫描；检测到 `check-secrets.sh` 时只报 INFO「已跳过执行」
+- 新增 `--offline`（插件配置 `offline: true`）：完全不访问 npm registry，
+  依赖名/版本不外发；未安装依赖的许可证报 INFO 而非 WARN
+- 新增安全回归用例：构造一个「被执就写 marker 文件」的恶意
+  `check-secrets.sh`，审核后断言 marker **不存在**，且报告提示已跳过
+
+内置规则本就覆盖 `check-secrets.sh` 的模式并做了扩展（npm_/Google/Anthropic），
+因此移除委托没有损失检测能力。
+
+## 6. 仍然没有证明的部分（如实列出）
 
 - 图片相似度、图标是否抄袭：离线无法判定，只列为人工复核
 - 整段改写后的代码抄袭：基于头/版权行/标记的检测查不出

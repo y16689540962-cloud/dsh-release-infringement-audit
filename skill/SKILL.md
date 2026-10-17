@@ -1,7 +1,7 @@
 ---
 name: release-infringement-audit
 description: 发布前侵权/法律风险审核。当用户说「发布前审一下」「有没有侵权风险」「能发到 npm/ClawHub/GitHub 吗」「release audit」时使用。扫描开源许可证兼容性（GPL 传染/CC-NC）、复制的第三方代码、文档图片字体素材、商标冲突、密钥泄漏五大类，输出结构化分级报告。判定锚定 SPDX 与 FSF/CC 官方分类。
-version: 1.0.1
+version: 1.0.2
 license: MIT
 metadata: {"openclaw":{"requires":{"bins":["python3"]}}}
 ---
@@ -43,7 +43,7 @@ python3 <skill目录>/scripts/release_audit.py /path/to/project --out audit-repo
 | B 复制的第三方代码 | SPDX 头、版权行、copied-from 标记 | 源码文件带 `SPDX-License-Identifier: GPL-2.0-only` |
 | C 文档/图片/字体 | 字体再分发、CC-NC 素材、无来源图片 | 无 OFL 说明的 .ttf；文档引用 NC 授权素材 |
 | D 品牌与商标 | 项目名与知名商标冲突 | 命名含知名品牌（仅 WARN，描述性使用可抗辩） |
-| E 密钥与隐私 | 有 check-secrets.sh 时委托它，否则内置规则 | sk-/ghp_/AKIA/私钥内容 |
+| E 密钥与隐私 | 内置规则（不执行被审项目脚本） | sk-/ghp_/AKIA/私钥内容 |
 
 ## 结论分级
 
@@ -68,5 +68,5 @@ Creative Commons 官方「CC 不建议用于软件」、choosealicense.com 分�
 
 ## 与工作区现有工具的关系
 
-- **check-secrets.sh**（工作区根目录）：E 类密钥扫描优先委托它执行，规则同源不重复造轮子；项目里没有它时用内置同源模式
+- **check-secrets.sh**（工作区根目录）：内置密钥规则与它同源并扩展；但本工具**不执行被审项目的脚本**（被审仓库可能恶意），检测到它只提示、不运行
 - **dsh-plugin-release skill**：管发布流程（平台选择/凭据/验证），本 skill 管「能不能发」的法律侧，二者互补

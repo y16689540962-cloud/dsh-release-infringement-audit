@@ -111,10 +111,10 @@ test('runner failures reach the caller unchanged', async () => {
 	await assert.rejects(() => tool.execute({ path: '/tmp/nope' }, {}), /目录不存在/);
 });
 
-test('config flows into the runner: python override and timeout budget', async () => {
+test('config flows into the runner: python, timeout budget and offline mode', async () => {
 	let seen = null;
 	const tool = createTool(
-		{ python: '/opt/custom/python3', timeoutMs: 4321 },
+		{ python: '/opt/custom/python3', timeoutMs: 4321, offline: true },
 		{
 			runAudit: async (options) => {
 				seen = options;
@@ -126,6 +126,7 @@ test('config flows into the runner: python override and timeout budget', async (
 	await tool.execute({ path: '/tmp/x' }, {});
 	assert.equal(seen.python, '/opt/custom/python3');
 	assert.equal(seen.timeoutMs, 4321);
+	assert.equal(seen.offline, true, 'offline must reach the scanner so no registry lookup happens');
 	assert.equal(seen.projectPath, '/tmp/x');
 });
 

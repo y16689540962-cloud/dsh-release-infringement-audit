@@ -17,3 +17,6 @@
         # an unresolved dependency tree is the slow case: every unresolved package
         # falls back to a registry lookup.
         timeoutMs: 120000
+        # When true, never contact the npm registry: dependency names/versions stay
+        # local. Unresolved dependencies are then reported as INFO instead of WARN.
+        offline: false

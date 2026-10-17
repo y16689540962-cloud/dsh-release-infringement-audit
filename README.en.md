@@ -64,7 +64,7 @@ instead of throwing.
 | B Third-party code | SPDX headers, foreign copyright lines, copied-from markers | a source file headed `SPDX-License-Identifier: GPL-2.0-only` |
 | C Assets | font redistribution, CC-NC, uncredited images | a `.ttf` with no accompanying licence |
 | D Trademarks | project name / title vs well-known marks | a name containing a known brand (WARN only — nominative use is defensible) |
-| E Secrets | built-in rules; delegates to `check-secrets.sh` when the project has one | `sk-` / `ghp_` / `AKIA` / private key material |
+| E Secrets | built-in rules; **never executes scripts from the audited project** | `sk-` / `ghp_` / `AKIA` / private key material |
 
 ## Verification (the project's own discipline)
 

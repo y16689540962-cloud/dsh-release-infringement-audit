@@ -36,6 +36,7 @@ dsh plugin --profile desktop add dsh-release-infringement-audit
 |---|---|---|
 | `python` | 空 | 运行扫描器的解释器。空 = `$DSH_AUDIT_PYTHON` → `$PYTHON` → `python3` |
 | `timeoutMs` | `120000` | 单次审核预算。依赖未安装时每个包都要查 registry，慢的情况在这里调 |
+| `offline` | `false` | `true` = 完全不访问 npm registry（依赖名/版本不外发）；未安装依赖的许可证报 INFO |
 
 ## 工具契约
 
@@ -61,19 +62,19 @@ dsh plugin --profile desktop add dsh-release-infringement-audit
 | B 第三方代码 | SPDX 头、他人版权行、copied-from 标记 | 源文件带 `SPDX-License-Identifier: GPL-2.0-only` |
 | C 素材 | 字体再分发、CC-NC、无来源图片 | 无 OFL 说明的 `.ttf` |
 | D 商标 | 项目名/标题撞知名商标 | 命名含知名品牌（仅 WARN，描述性使用可抗辩） |
-| E 密钥 | 内置规则；项目里有 `check-secrets.sh` 时委托它 | `sk-` / `ghp_` / `AKIA` / 私钥内容 |
+| E 密钥 | 内置规则；**绝不执行被审项目脚本** | `sk-` / `ghp_` / `AKIA` / 私钥内容 |
 
 ## 验证（本项目自己的纪律）
 
 ```bash
 npm install          # 只装 devDependency（@deepseek-ai/dsh-tools，供单元测试）
 npm test             # 19 个 node 用例：工具契约 + 真跑 python 集成 + CLI 一致性
-npm run selftest     # 21 个 python 用例：用已知坏输入证明扫描器有效
+npm run selftest     # 22 个 python 用例：用已知坏输入证明扫描器有效
 ```
 
 已被证明的三件事（缺一不可）：
 
-1. **扫描器有效**：21 个「已知坏输入」用例全过，另有干净项目零误报用例。
+1. **扫描器有效**：22 个「已知坏输入」用例全过，另有干净项目零误报用例。
 2. **工具在运行时真的注册**：在隔离 profile 里 boot，用一个探针插件查询
    `ctx.tools.schemas()` → `total=2 auditTool=true`。
    （对照实验：故意写错 schema 的插件 boot 时报

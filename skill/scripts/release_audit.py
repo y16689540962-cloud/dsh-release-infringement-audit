@@ -11,7 +11,7 @@ release_audit.py — 发布前侵权/法律风险审核（Release Infringement A
     B  复制的第三方代码   SPDX 头、版权行、copied-from 标记
     C  文档/图片/字体素材 字体再分发、CC-NC 素材、无来源图片
     D  品牌与商标         项目名/标题与知名商标冲突
-    E  密钥与隐私         有 check-secrets.sh 时委托它，否则用内置同源规则
+    E  密钥与隐私         内置规则（绝不执行被审项目的脚本）
 
 退出码: 0 = 干净    1 = 仅警告(WARN/INFO)    2 = 存在阻断项(BLOCK)
 
@@ -23,7 +23,6 @@ import argparse
 import json
 import os
 import re
-import subprocess
 import sys
 import urllib.parse
 import urllib.request
@@ -208,6 +207,8 @@ class Audit:
         self.root = Path(root).resolve()
         self.findings = []
         self._reg_cache = {}
+        # 离线模式：不访问 npm registry（依赖名/版本属于私有信息，可能不愿外发）
+        self.offline = False
 
     def add(self, sev, cat, title, evidence, basis, fix):
         self.findings.append({
@@ -299,9 +300,15 @@ class Audit:
                     verdict_lic, src = d.get("license"), "node_modules"
                 except Exception:
                     pass
-            if verdict_lic is None:
+            if verdict_lic is None and not self.offline:
                 verdict_lic = fetch_registry_license(name, want_ver, self._reg_cache)
                 src = "registry"
+            if verdict_lic is None and self.offline:
+                self.add("INFO", "A", f"离线模式下依赖 license 无法解析: {name}",
+                         "node_modules 中未找到该依赖，且 --offline 禁止 registry 查询",
+                         "离线模式不发送任何依赖信息到外部",
+                         "先 npm install 再审核，或去掉 --offline")
+                continue
             if verdict_lic is None:
                 self.add("INFO", "A", f"依赖 license 无法解析: {name}",
                          f"node_modules 与 registry 均未取得 license 字段",
@@ -562,22 +569,19 @@ class Audit:
                              "若为描述性用途注明「不隶属于 Y」；作为品牌名使用建议改名")
                     break
 
-    # ---- E: 密钥（优先委托 check-secrets.sh）----
+    # ---- E: 密钥（只读扫描，绝不执行被审项目代码）----
     def scan_secrets(self):
-        deleg = self.root / "check-secrets.sh"
-        if deleg.is_file():
-            try:
-                r = subprocess.run(["bash", str(deleg)], cwd=str(self.root),
-                                   capture_output=True, text=True, timeout=120)
-                if r.returncode == 1:
-                    self.add("BLOCK", "E", "check-secrets.sh 发现疑似密钥（已委托执行）",
-                             (r.stdout.strip().splitlines() or [""])[-3:] and
-                             "\n".join(r.stdout.strip().splitlines()[-4:]),
-                             "工作区密钥安全规范（AGENTS.md）",
-                             "按 AGENTS.md「密钥安全」章节处置后再发布")
-                return
-            except Exception:
-                pass  # 委托失败 → 回退内置规则
+        # 安全边界：绝不执行被审项目里的任何脚本。
+        # 被审仓库可能是恶意的（这正是审核存在的理由），执行它的 check-secrets.sh
+        # 等于把任意代码执行权交给被审对象 —— ClawHub 的 aig/skillspector 曾按
+        # High 风险判定此行为，修复方式是彻底移除执行路径，而不是加开关。
+        # 内置规则已覆盖 check-secrets.sh 的模式并做了扩展，无需委托。
+        hook = self.root / "check-secrets.sh"
+        if hook.is_file():
+            self.add("INFO", "E", "项目自带 check-secrets.sh（已跳过执行）",
+                     f"发现 {hook.name}；为安全起见不执行被审项目的脚本",
+                     "审核工具会打开不可信仓库；执行其中脚本即任意代码执行",
+                     "需要时请自行在可信环境运行该脚本；内置规则已覆盖其模式")
         for p in iter_files(self.root):
             # 密钥文件常以 .pem/.key 等扩展名存在，必须纳入扫描
             if (p.suffix.lower() not in TEXT_EXTS
@@ -647,6 +651,8 @@ def main():
     ap.add_argument("project", help="项目目录")
     ap.add_argument("--format", choices=("md", "json"), default="md")
     ap.add_argument("--out", help="写入文件而非 stdout")
+    ap.add_argument("--offline", action="store_true",
+                    help="不访问 npm registry（依赖未安装时无法解析其许可证）")
     args = ap.parse_args()
 
     root = Path(args.project)
@@ -655,6 +661,7 @@ def main():
         return 2
 
     audit = Audit(root)
+    audit.offline = bool(args.offline)
     owner_names = set()
     pkg = root / "package.json"
     if pkg.exists():
