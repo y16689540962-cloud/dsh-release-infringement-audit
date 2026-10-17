@@ -300,11 +300,62 @@ def test_never_executes_target_scripts():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def test_symlink_escape_is_not_followed():
+    """安全属性：不跟随符号链接读取项目外的文件。"""
+    outer = Path(tempfile.mkdtemp(prefix="ria-outside-"))
+    tmp = Path(tempfile.mkdtemp(prefix="ria-symlink-"))
+    secret_file = outer / "id_rsa"
+    try:
+        secret_file.write_text("-----BEGIN " + "RSA PRIVATE KEY" + "-----\n")
+        (tmp / "package.json").write_text(json.dumps({"name": "sl", "license": "MIT"}))
+        (tmp / "LICENSE").write_text("MIT License\n")
+        (tmp / "leak.pem").symlink_to(secret_file)
+        proc = subprocess.run(
+            [sys.executable, str(AUDIT), str(tmp), "--format", "json"],
+            capture_output=True, text=True, timeout=120)
+        data = json.loads(proc.stdout)
+        if any(f["category"] == "E" and f["severity"] == "BLOCK" for f in data["findings"]):
+            return False, "跟随了符号链接，读到了项目外的私钥"
+        if "id_rsa" in proc.stdout:
+            return False, "报告中出现了项目外文件名"
+        return True, "ok"
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+        shutil.rmtree(outer, ignore_errors=True)
+
+
+def test_secret_value_is_redacted():
+    """安全属性：报告不回显密钥值（报告可能被转发或上传）。"""
+    tmp = Path(tempfile.mkdtemp(prefix="ria-redact-"))
+    try:
+        (tmp / "package.json").write_text(json.dumps({"name": "r", "license": "MIT"}))
+        (tmp / "LICENSE").write_text("MIT License\n")
+        (tmp / "config.js").write_text(f"const K = '{FAKE_SK}';\n")
+        proc = subprocess.run(
+            [sys.executable, str(AUDIT), str(tmp), "--format", "json"],
+            capture_output=True, text=True, timeout=120)
+        if FAKE_SK in proc.stdout:
+            return False, "报告中回显了完整密钥"
+        if FAKE_SK[:16] in proc.stdout:
+            return False, "报告中回显了密钥前缀"
+        data = json.loads(proc.stdout)
+        if not any(f["category"] == "E" and f["severity"] == "BLOCK" for f in data["findings"]):
+            return False, "未检出密钥"
+        return True, "ok"
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     passed = failed = 0
-    ok, msg = test_never_executes_target_scripts()
-    print(("✅" if ok else "❌") + " 安全：绝不执行被审项目脚本" + ("" if ok else f"\n   → {msg}"))
-    passed, failed = passed + (1 if ok else 0), failed + (0 if ok else 1)
+    for name, fn in (
+        ("安全：绝不执行被审项目脚本", test_never_executes_target_scripts),
+        ("安全：不跟随符号链接读取项目外文件", test_symlink_escape_is_not_followed),
+        ("安全：报告不回显密钥值", test_secret_value_is_redacted),
+    ):
+        ok, msg = fn()
+        print(("✅" if ok else "❌") + " " + name + ("" if ok else f"\n   → {msg}"))
+        passed, failed = passed + (1 if ok else 0), failed + (0 if ok else 1)
     for case in CASES:
         ok, msg = run_case(case)
         mark = "✅" if ok else "❌"

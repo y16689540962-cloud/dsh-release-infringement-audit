@@ -69,12 +69,12 @@ dsh plugin --profile desktop add dsh-release-infringement-audit
 ```bash
 npm install          # 只装 devDependency（@deepseek-ai/dsh-tools，供单元测试）
 npm test             # 19 个 node 用例：工具契约 + 真跑 python 集成 + CLI 一致性
-npm run selftest     # 22 个 python 用例：用已知坏输入证明扫描器有效
+npm run selftest     # 24 个 python 用例：用已知坏输入证明扫描器有效
 ```
 
 已被证明的三件事（缺一不可）：
 
-1. **扫描器有效**：22 个「已知坏输入」用例全过，另有干净项目零误报用例。
+1. **扫描器有效**：24 个「已知坏输入」用例全过，另有干净项目零误报用例。
 2. **工具在运行时真的注册**：在隔离 profile 里 boot，用一个探针插件查询
    `ctx.tools.schemas()` → `total=2 auditTool=true`。
    （对照实验：故意写错 schema 的插件 boot 时报

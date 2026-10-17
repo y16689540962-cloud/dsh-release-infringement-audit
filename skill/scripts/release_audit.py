@@ -100,6 +100,10 @@ def iter_files(root, extra_skip=None):
         dirnames[:] = [d for d in dirnames if d not in skip and not d.startswith(".git")]
         for fn in filenames:
             p = Path(dirpath) / fn
+            # 不跟随符号链接：被审仓库可能是恶意的，可借 symlink 指向项目外的
+            # 敏感文件（~/.ssh 等），让审核报告把它读出来。
+            if p.is_symlink():
+                continue
             yield p
 
 
@@ -597,10 +601,9 @@ class Audit:
             for pat, desc in SECRET_PATTERNS:
                 for m in re.finditer(pat, text):
                     line = text[:m.start()].count("\n") + 1
-                    shown = m.group(0)[:14] + "…<截断>"
                     rel = p.relative_to(self.root)
                     self.add("BLOCK", "E", f"{desc}: {rel}",
-                             f"L{line}: {shown}",
+                             f"L{line}: 模式命中（值已隐藏，不在报告中回显）",
                              "密钥一旦公开必须先吊销再清理（AGENTS.md 密钥安全章节）",
                              "改为占位符、移入 .env（.gitignore 已拦）并吊销已泄露 key")
 
